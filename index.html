@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudioPic - Optimizador de Imágenes Premium</title>
+    <title>StudioPic Pro - Optimizador & Vectorizador Open Source</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- ImageTracer.js (Librería Open Source para Vectorización Real en JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
                             500: '#6366f1',
                             600: '#4f46e5',
                             700: '#4338ca',
-                            900: '#312e81',
                         }
                     }
                 }
@@ -25,13 +26,10 @@
         }
     </script>
     <style>
-        /* Custom scrollbar styling */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        /* Transparencies Grid Pattern for Image Previews */
         .bg-transparent-grid {
             background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), 
                               linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
@@ -44,14 +42,494 @@
 </head>
 <body class="h-full flex flex-col antialiased font-sans selection:bg-brand-500 selection:text-white">
 
+    <!-- Header Navbar -->
     <header class="flex items-center justify-between px-6 py-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
         <div class="flex items-center space-x-3">
             <div class="p-2 bg-brand-600 rounded-xl text-white shadow-lg shadow-brand-500/20">
                 <i data-lucide="sparkles" class="w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">StudioPic</h1>
-                <p class="text-xs text-slate-400 font-medium">Procesamiento de imágenes integrado en tu navegador</p>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">StudioPic Pro</h1>
+                <p class="text-xs text-slate-400 font-medium">Motor de Vectorización e Imagen Open Source (ImageTracer.js)</p>
             </div>
         </div>
         <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                100% Client-Side
+            </span>
+        </div>
+    </header>
+
+    <!-- Workspace -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- Sidebar Controls -->
+        <aside class="w-full md:w-80 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col overflow-y-auto">
+            <div class="p-6 flex-1 space-y-6">
+                
+                <div>
+                    <button id="btn-apply-all" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-brand-600/10 transition-all active:scale-[0.98]">
+                        <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+                        <span>Aplicar las 3 funciones</span>
+                    </button>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <div class="space-y-4">
+                    <h3 class="text-xs font-semibold text-slate-400 tracking-wider uppercase">Herramientas Profesionales</h3>
+                    
+                    <!-- Feature 1: Improve -->
+                    <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl transition-all hover:border-slate-700">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+                                    <i data-lucide="sliders" class="w-4 h-4"></i>
+                                </div>
+                                <label for="toggle-improve" class="text-sm font-medium text-slate-200 cursor-pointer">Mejorar Imagen</label>
+                            </div>
+                            <input type="checkbox" id="toggle-improve" class="w-9 h-5 bg-slate-700 checked:bg-brand-600 rounded-full cursor-pointer appearance-none relative before:content-[''] before:absolute before:h-4 before:w-4 before:bottom-0.5 before:left-0.5 before:bg-white before:rounded-full before:transition-all checked:before:translate-x-4 transition-colors">
+                        </div>
+                        <div id="sliders-container" class="space-y-3 pt-2 hidden border-t border-slate-800/60">
+                            <div>
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Brillo</span>
+                                    <span id="val-brightness">100%</span>
+                                </div>
+                                <input type="range" id="slider-brightness" min="50" max="150" value="105" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Contraste</span>
+                                    <span id="val-contrast">100%</span>
+                                </div>
+                                <input type="range" id="slider-contrast" min="50" max="150" value="110" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2: Smart Background Removal -->
+                    <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl transition-all hover:border-slate-700">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                                    <i data-lucide="scissors" class="w-4 h-4"></i>
+                                </div>
+                                <label for="toggle-remove-bg" class="text-sm font-medium text-slate-200 cursor-pointer">Quitar Fondo (Smart Edge)</label>
+                            </div>
+                            <input type="checkbox" id="toggle-remove-bg" class="w-9 h-5 bg-slate-700 checked:bg-brand-600 rounded-full cursor-pointer appearance-none relative before:content-[''] before:absolute before:h-4 before:w-4 before:bottom-0.5 before:left-0.5 before:bg-white before:rounded-full before:transition-all checked:before:translate-x-4 transition-colors">
+                        </div>
+                        <p class="text-xs text-slate-400 ml-11">Aísla por bordes usando inundación tolerante. Respeta ropa y ropa blanca interna.</p>
+                    </div>
+
+                    <!-- Feature 3: Vectorize with ImageTracer -->
+                    <div class="p-4 bg-slate-800/40 border border-slate-800 rounded-xl transition-all hover:border-slate-700">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-fuchsia-500/10 text-fuchsia-400 rounded-lg">
+                                    <i data-lucide="vector" class="w-4 h-4"></i>
+                                </div>
+                                <label for="toggle-vectorize" class="text-sm font-medium text-slate-200 cursor-pointer">Vectorizar (ImageTracer SVG)</label>
+                            </div>
+                            <input type="checkbox" id="toggle-vectorize" class="w-9 h-5 bg-slate-700 checked:bg-brand-600 rounded-full cursor-pointer appearance-none relative before:content-[''] before:absolute before:h-4 before:w-4 before:bottom-0.5 before:left-0.5 before:bg-white before:rounded-full before:transition-all checked:before:translate-x-4 transition-colors">
+                        </div>
+                        <p class="text-xs text-slate-400 ml-11">Convierte bordes y formas en trazos SVG vectoriales limpios.</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="p-4 bg-slate-950/40 border-t border-slate-800/80 sticky bottom-0 backdrop-blur-md">
+                <button id="btn-process" disabled class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-slate-400 font-medium rounded-xl border border-slate-700/50 cursor-not-allowed transition-all duration-150">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    <span>Procesar Imagen</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Display Viewport -->
+        <main class="flex-1 bg-slate-950 p-6 flex flex-col justify-center items-center overflow-y-auto relative">
+            
+            <!-- Loading Spinner -->
+            <div id="loader-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-30 hidden flex-col items-center justify-center space-y-4">
+                <div class="relative w-16 h-16">
+                    <div class="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-t-brand-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                </div>
+                <div class="text-center">
+                    <p id="loader-text" class="text-sm font-medium text-slate-200">Procesando vectores...</p>
+                    <p class="text-xs text-slate-400 mt-1">Calculando curvas SVG y aislamiento de fondo.</p>
+                </div>
+            </div>
+
+            <!-- Upload Drop Zone -->
+            <div id="drop-zone" class="w-full max-w-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 rounded-2xl p-12 text-center cursor-pointer hover:border-brand-500 hover:bg-slate-900/60 transition-all group flex flex-col items-center justify-center">
+                <input type="file" id="file-input" accept="image/*" class="hidden">
+                <div class="p-4 bg-slate-800 text-slate-300 rounded-2xl group-hover:text-brand-400 group-hover:scale-110 transition-all duration-200 shadow-inner mb-4">
+                    <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-200 mb-1">Arrastra tu imagen aquí</h3>
+                <p class="text-sm text-slate-400 mb-6 max-w-sm mx-auto">Soporta PNG, JPG, WEBP. Procesamiento local instantáneo.</p>
+                <button type="button" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-medium rounded-xl transition-colors">
+                    Examinar Archivos
+                </button>
+            </div>
+
+            <!-- Results Viewport -->
+            <div id="results-panel" class="w-full h-full hidden flex-col justify-between space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+                    
+                    <!-- Original -->
+                    <div class="flex flex-col bg-slate-900/60 border border-slate-800 rounded-2xl p-4 overflow-hidden">
+                        <div class="flex items-center justify-between mb-3 text-slate-400 px-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="image" class="w-3.5 h-3.5"></i> Original (Antes)
+                            </span>
+                            <span id="info-before-dim" class="text-xs">0 x 0 px</span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden p-2 relative border border-slate-800/50">
+                            <img id="img-before" class="max-w-full max-h-full object-contain select-none" src="" alt="Original">
+                        </div>
+                    </div>
+
+                    <!-- Processed -->
+                    <div class="flex flex-col bg-slate-900/60 border border-slate-800 rounded-2xl p-4 overflow-hidden">
+                        <div class="flex items-center justify-between mb-3 text-slate-400 px-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Procesada / Vectorial (Después)
+                            </span>
+                            <span id="info-after-dim" class="text-xs">0 x 0 px</span>
+                        </div>
+                        <div id="output-container" class="flex-1 flex items-center justify-center bg-slate-950 bg-transparent-grid rounded-xl overflow-hidden p-2 relative border border-slate-800/50">
+                            <img id="img-after" class="max-w-full max-h-full object-contain select-none hidden" src="" alt="Resultado">
+                            <div id="svg-after-container" class="max-w-full max-h-full overflow-hidden hidden"></div>
+                            <div id="empty-after-state" class="text-slate-500 text-sm text-center flex flex-col items-center gap-2">
+                                <i data-lucide="refresh-cw" class="w-8 h-8 opacity-40"></i>
+                                <span>Elige las opciones y presiona "Procesar"</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                    <button id="btn-reset" class="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700/60 transition-colors">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Eliminar Imagen
+                    </button>
+                    <button id="btn-download" disabled class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Descargar Resultado</span>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <canvas id="internal-canvas" class="hidden"></canvas>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const resultsPanel = document.getElementById('results-panel');
+        const imgBefore = document.getElementById('img-before');
+        const imgAfter = document.getElementById('img-after');
+        const svgAfterContainer = document.getElementById('svg-after-container');
+        const emptyAfterState = document.getElementById('empty-after-state');
+        
+        const toggleImprove = document.getElementById('toggle-improve');
+        const toggleRemoveBg = document.getElementById('toggle-remove-bg');
+        const toggleVectorize = document.getElementById('toggle-vectorize');
+        const slidersContainer = document.getElementById('sliders-container');
+        
+        const sliderBrightness = document.getElementById('slider-brightness');
+        const sliderContrast = document.getElementById('slider-contrast');
+        const valBrightness = document.getElementById('val-brightness');
+        const valContrast = document.getElementById('val-contrast');
+        
+        const btnApplyAll = document.getElementById('btn-apply-all');
+        const btnProcess = document.getElementById('btn-process');
+        const btnReset = document.getElementById('btn-reset');
+        const btnDownload = document.getElementById('btn-download');
+        
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const loaderText = document.getElementById('loader-text');
+        const infoBeforeDim = document.getElementById('info-before-dim');
+        const infoAfterDim = document.getElementById('info-after-dim');
+        
+        const canvas = document.getElementById('internal-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        let nativeImageSource = null;
+        let lastGeneratedSvgString = null;
+
+        lucide.createIcons();
+
+        // Event Listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-brand-500'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-brand-500'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-brand-500');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) processRawUploadedFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) processRawUploadedFile(e.target.files[0]);
+        });
+
+        toggleImprove.addEventListener('change', (e) => {
+            slidersContainer.classList.toggle('hidden', !e.target.checked);
+            updateProcessButtonState();
+        });
+
+        [toggleRemoveBg, toggleVectorize].forEach(el => el.addEventListener('change', updateProcessButtonState));
+
+        sliderBrightness.addEventListener('input', (e) => valBrightness.textContent = `${e.target.value}%`);
+        sliderContrast.addEventListener('input', (e) => valContrast.textContent = `${e.target.value}%`);
+
+        btnApplyAll.addEventListener('click', () => {
+            toggleImprove.checked = true;
+            toggleRemoveBg.checked = true;
+            toggleVectorize.checked = true;
+            slidersContainer.classList.remove('hidden');
+            updateProcessButtonState();
+            if (nativeImageSource) executeRenderingPipeline();
+        });
+
+        btnProcess.addEventListener('click', executeRenderingPipeline);
+        btnReset.addEventListener('click', resetWorkspaceToDefault);
+        
+        btnDownload.addEventListener('click', () => {
+            if (lastGeneratedSvgString && toggleVectorize.checked) {
+                const blob = new Blob([lastGeneratedSvgString], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.download = 'studiopic_vector.svg';
+                a.href = url;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else if (imgAfter.src) {
+                const a = document.createElement('a');
+                a.download = 'studiopic_optimized.png';
+                a.href = imgAfter.src;
+                a.click();
+            }
+        });
+
+        function updateProcessButtonState() {
+            const anyActive = toggleImprove.checked || toggleRemoveBg.checked || toggleVectorize.checked;
+            btnProcess.disabled = !(nativeImageSource && anyActive);
+            if (!btnProcess.disabled) {
+                btnProcess.className = "w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-xl shadow-lg transition-all active:scale-[0.98]";
+            } else {
+                btnProcess.className = "w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-slate-400 font-medium rounded-xl border border-slate-700/50 cursor-not-allowed";
+            }
+        }
+
+        function processRawUploadedFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                nativeImageSource = new Image();
+                nativeImageSource.onload = function() {
+                    imgBefore.src = event.target.result;
+                    infoBeforeDim.textContent = `${nativeImageSource.width} x ${nativeImageSource.height} px`;
+                    
+                    dropZone.classList.add('hidden');
+                    resultsPanel.classList.remove('hidden');
+                    
+                    imgAfter.classList.add('hidden');
+                    svgAfterContainer.classList.add('hidden');
+                    emptyAfterState.classList.remove('hidden');
+                    btnDownload.disabled = true;
+                    
+                    updateProcessButtonState();
+                };
+                nativeImageSource.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetWorkspaceToDefault() {
+            nativeImageSource = null;
+            lastGeneratedSvgString = null;
+            fileInput.value = "";
+            imgBefore.src = "";
+            imgAfter.src = "";
+            svgAfterContainer.innerHTML = "";
+            
+            imgAfter.classList.add('hidden');
+            svgAfterContainer.classList.add('hidden');
+            emptyAfterState.classList.remove('hidden');
+            resultsPanel.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            
+            toggleImprove.checked = false;
+            toggleRemoveBg.checked = false;
+            toggleVectorize.checked = false;
+            slidersContainer.classList.add('hidden');
+            
+            updateProcessButtonState();
+        }
+
+        function executeRenderingPipeline() {
+            if (!nativeImageSource) return;
+
+            loaderOverlay.classList.remove('hidden');
+            loaderText.textContent = "Preparando lienzo de renderizado...";
+
+            setTimeout(() => {
+                // Ajustar dimensión del canvas
+                canvas.width = nativeImageSource.width;
+                canvas.height = nativeImageSource.height;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(nativeImageSource, 0, 0);
+
+                // Paso 1: Mejorar filtros de color
+                if (toggleImprove.checked) {
+                    loaderText.textContent = "Ajustando curva cromática y brillo...";
+                    const b = sliderBrightness.value;
+                    const c = sliderContrast.value;
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.filter = `brightness(${b}%) contrast(${c}%)`;
+                    tempCtx.drawImage(canvas, 0, 0);
+                    
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(tempCanvas, 0, 0);
+                }
+
+                // Paso 2: Aislamiento Inteligente de Fondo por Bordes (Smart Edge Flood Fill)
+                if (toggleRemoveBg.checked) {
+                    loaderText.textContent = "Aislando el fondo mediante inundación de bordes...";
+                    smartFloodFillBackgroundRemoval(canvas, ctx);
+                }
+
+                // Paso 3: Vectorización Real SVG con ImageTracer.js
+                if (toggleVectorize.checked) {
+                    loaderText.textContent = "Generando trazados vectoriales SVG (ImageTracer)...";
+                    setTimeout(() => {
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        // Opciones optimizadas para ilustraciones/personajes
+                        const options = {
+                            corsenabled: false,
+                            ltres: 1,
+                            qtres: 1,
+                            pathomit: 8,
+                            colorsampling: 2,
+                            numberofcolors: 16,
+                            mincolorratio: 0.02,
+                            colorquantcycles: 3,
+                            scale: 1,
+                            strokewidth: 1
+                        };
+                        
+                        lastGeneratedSvgString = ImageTracer.imagedataToSVG(imgData, options);
+                        
+                        svgAfterContainer.innerHTML = lastGeneratedSvgString;
+                        const svgEl = svgAfterContainer.querySelector('svg');
+                        if (svgEl) {
+                            svgEl.setAttribute('class', 'max-w-full max-h-full object-contain');
+                            svgEl.style.maxHeight = '100%';
+                        }
+
+                        imgAfter.classList.add('hidden');
+                        svgAfterContainer.classList.remove('hidden');
+                        emptyAfterState.classList.add('hidden');
+                        
+                        infoAfterDim.textContent = `${canvas.width} x ${canvas.height} (SVG Vectorial)`;
+                        btnDownload.disabled = false;
+                        loaderOverlay.classList.add('hidden');
+                    }, 200);
+                } else {
+                    // Si no se vectoriza, mostrar PNG procesado
+                    lastGeneratedSvgString = null;
+                    const dataUrl = canvas.toDataURL('image/png');
+                    imgAfter.src = dataUrl;
+                    
+                    svgAfterContainer.classList.add('hidden');
+                    imgAfter.classList.remove('hidden');
+                    emptyAfterState.classList.add('hidden');
+                    
+                    infoAfterDim.textContent = `${canvas.width} x ${canvas.height} px`;
+                    btnDownload.disabled = false;
+                    loaderOverlay.classList.add('hidden');
+                }
+
+            }, 200);
+        }
+
+        // Algoritmo de eliminación de fondo por bordes (Varita Mágica Inteligente)
+        function smartFloodFillBackgroundRemoval(cvs, context) {
+            const width = cvs.width;
+            const height = cvs.height;
+            const imgData = context.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            const visited = new Uint8Array(width * height);
+            
+            // Tomar el color de referencia de la esquina superior izquierda (0,0)
+            const bgR = data[0];
+            const bgG = data[1];
+            const bgB = data[2];
+            
+            // Tolerancia de color para el fondo (permite sombras suaves/texturas claras)
+            const tolerance = 45;
+
+            function isBgColor(r, g, b) {
+                return Math.abs(r - bgR) <= tolerance &&
+                       Math.abs(g - bgG) <= tolerance &&
+                       Math.abs(b - bgB) <= tolerance;
+            }
+
+            // Cola para recorrido de inundación (BFS)
+            const queue = [];
+
+            // Agregar todos los píxeles del borde exterior a la cola de escaneo
+            for (let x = 0; x < width; x++) {
+                queue.push(x, 0);
+                queue.push(x, height - 1);
+            }
+            for (let y = 0; y < height; y++) {
+                queue.push(0, y);
+                queue.push(width - 1, y);
+            }
+
+            let qIdx = 0;
+            while (qIdx < queue.length) {
+                const x = queue[qIdx++];
+                const y = queue[qIdx++];
+                const idx = y * width + x;
+
+                if (visited[idx]) continue;
+                visited[idx] = 1;
+
+                const pIdx = idx * 4;
+                const r = data[pIdx];
+                const g = data[pIdx + 1];
+                const b = data[pIdx + 2];
+
+                if (isBgColor(r, g, b)) {
+                    data[pIdx + 3] = 0; // Transparente solo si está conectado al borde exterior
+
+                    // Vecinos 4-direccionales
+                    if (x > 0) queue.push(x - 1, y);
+                    if (x < width - 1) queue.push(x + 1, y);
+                    if (y > 0) queue.push(x, y - 1);
+                    if (y < height - 1) queue.push(x, y + 1);
+                }
+            }
+
+            context.putImageData(imgData, 0, 0);
+        }
+    </script>
+</body>
+                        </html>
